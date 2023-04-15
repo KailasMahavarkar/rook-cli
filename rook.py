@@ -160,7 +160,8 @@ def peeker(peek: bool = True):
 def gitSwitch(profile: str):
     profileMap = {
         "orkait": "orkaitsolutions@gmail.com",
-        "kai": "kailashmahavarkar5@gmail.com"
+        "kai": "kailashmahavarkar5@gmail.com",
+        "cwk": "kailas.m@carwale.com"
     }
 
     if (profile in profileMap):
@@ -170,6 +171,12 @@ def gitSwitch(profile: str):
     else:
         print(f'echo "profile {profile} is does not exists"')
         print(f'echo possible values, {[x for x in profileMap.keys()]}')
+
+
+@app.command('shutdown', help='shutdown pc (minutes)')
+def shutdown(timer: int = 0):
+    typer.echo(f"pc will shutdown in {timer} mins")
+    os.system(f'shutdown.exe /s /t {timer * 60}')
 
 
 if __name__ == "__main__":
