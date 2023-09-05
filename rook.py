@@ -35,16 +35,26 @@ def pinger():
     os.system('ping -n 10000 -w 500 8.8.8.8')
 
 
-@app.command(help="removes all files with given extension")
-def cleanExtensions(extensions: str):
+@app.command(help="removes all files with given extensions")
+def cleanExtensions(extensions: str = "", inverse: bool = False):
+    """
+        extensions: comma separated extensions
+        inverse: if true, removes all files except given extensions
+    """
     extensions = [x.strip() for x in extensions.split(',')]
     extensions = tuple(extensions)
 
     def scandirs(path):
         for root, _, files in os.walk(path):
             for currentFile in files:
-                if (str(currentFile).lower().endswith(tuple(extensions))):
-                    os.remove(os.path.join(root, currentFile))
+
+                # check mode
+                if inverse:
+                    if (not str(currentFile).lower().endswith(tuple(extensions))):
+                        os.remove(os.path.join(root, currentFile))
+                else:
+                    if (str(currentFile).lower().endswith(tuple(extensions))):
+                        os.remove(os.path.join(root, currentFile))
 
     typer.echo(scandirs('.'))
 
