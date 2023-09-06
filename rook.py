@@ -189,5 +189,77 @@ def shutdown(timer: int = 0):
     os.system(f'shutdown.exe /s /t {timer * 60}')
 
 
+@app.command('shutdown', help='shutdown pc (minutes)')
+def shutdown(timer: int = 0):
+    typer.echo(f"pc will shutdown in {timer} mins")
+    os.system(f'shutdown.exe /s /t {timer * 60}')
+
+
+@app.command('adb-reverse', help='starts adb reverse port for android')
+def adbReverse(port=8081):
+    typer.echo(f"starting... adb reverse on port {port}")
+    os.system(f'adb reverse tcp:{port} tcp:{port}')
+
+
+@app.command('adb-kill', help='kills adb server')
+def adbKill():
+    typer.echo(f"killing... adb server")
+    os.system(f'adb kill-server')
+
+
+@app.command('story', help='start storybook')
+def story(packageManager='npm'):
+    final_command = f'yarn storybook'
+
+    if packageManager == 'yarn':
+        final_command = f'yarn storybook'
+    elif packageManager == 'npm':
+        final_command = f'npm run storybook'
+    elif packageManager == 'pnpm':
+        final_command = f'pnpm run storybook'
+    else:
+        typer.echo(f"package manager {packageManager} is not supported")
+        return
+
+    typer.echo(f"starting... storybook")
+    os.system(final_command)
+
+
+@app.command('story:native', help='start storybook for native')
+def storyNative(packageManager='npm'):
+    final_command = f'yarn storybook:native'
+
+    if packageManager == 'yarn':
+        final_command = f'yarn storybook:native'
+    elif packageManager == 'npm':
+        final_command = f'npm run storybook:native'
+    elif packageManager == 'pnpm':
+        final_command = f'pnpm run storybook:native'
+    else:
+        typer.echo(f"package manager {packageManager} is not supported")
+        return
+
+    typer.echo(f"starting... storybook for native")
+    os.system(final_command)
+
+
+@app.command('docs', help='start docs')
+def storyNative(packageManager='npm'):
+    final_command = f'yarn docs'
+
+    if packageManager == 'yarn':
+        final_command = f'yarn docs'
+    elif packageManager == 'npm':
+        final_command = f'npm run docs'
+    elif packageManager == 'pnpm':
+        final_command = f'pnpm run docs'
+    else:
+        typer.echo(f"package manager {packageManager} is not supported")
+        return
+
+    typer.echo(f"starting... docs")
+    os.system(final_command)
+
+
 if __name__ == "__main__":
     app()
