@@ -101,7 +101,7 @@ def encrypt(argument: str, password: str):
         if confirm == 'y':
             tool = AES(
                 origin=folder,
-                password='299792458'
+                password=password
             )
             tool.decryptFiles()
             deleteKey(folderHash)
@@ -132,28 +132,21 @@ def decrypt(argument: str, password: str):
         typer.echo(f"folder {argument} is not encrypted")
 
 
-@app.command('lock', help='hides the vault')
-def encryptCache(password: str, hide: bool = True):
+@app.command("cache", help="encrypts/decrypt the cache folder")
+def cache(password: str, action: str, hide: bool):
     CACHE = "E:/@cache"
-    encrypt(
-        argument=CACHE,
-        password=password
-    )
 
-    if hide:
+    if action == "encrypt":
+        encrypt(
+            argument=CACHE,
+            password=password
+        )
         os.system(f'attrib +s +h {CACHE}')
-
-
-@app.command('unlock', help='unhides the vault')
-def decryptCache(password: str, unhide: bool = True):
-    CACHE = "E:/@cache"
-
-    decrypt(
-        argument=CACHE,
-        password=password
-    )
-
-    if unhide:
+    else:
+        decrypt(
+            argument=CACHE,
+            password=password
+        )
         os.system(f'attrib -s -h {CACHE}')
 
 
