@@ -3,6 +3,7 @@ import os
 from hashlib import md5
 from utils.aes import Cacher as AES
 from utils.env import getKey, setKey, deleteKey
+from time import sleep
 
 # create typer instance
 app = typer.Typer(
@@ -133,7 +134,7 @@ def decrypt(argument: str, password: str):
 
 
 @app.command("cache", help="encrypts/decrypt the cache folder")
-def cache(password: str, action: str, hide: bool):
+def cache(password: str, action: str):
     CACHE = "E:/@cache"
 
     if action == "encrypt":
