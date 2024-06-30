@@ -2,8 +2,16 @@ import typer
 import os
 from hashlib import md5
 from utils.aes import Cacher as AES
-from utils.env import getKey, setKey, deleteKey
-from time import sleep
+from utils.util import getFiles
+
+CACHE_PATH = "E:\\@cache"
+TESTING_PATH = "E:\\@testing"
+
+
+TYPER_OPTIONS = {
+    "help": "help",
+    "hide": "--hide",
+}
 
 # create typer instance
 app = typer.Typer(
@@ -36,11 +44,15 @@ def pinger():
     os.system('ping -n 10000 -w 500 8.8.8.8')
 
 
-@app.command(help="removes all files with given extensions")
-def cleanExtensions(extensions: str = "", inverse: bool = False):
+@app.command('clean-extensions', help="Removes all files with given extensions")
+def cleanExtensions(
+    extensions: str = typer.Option("", help="Comma-separated list of extensions to remove"),
+    inverse: bool = typer.Option(False, help="If true, removes all files except given extensions"),
+    path: str = typer.Option(".", help="Path to the directory to clean")
+):
     """
-        extensions: comma separated extensions
-        inverse: if true, removes all files except given extensions
+    extensions: comma separated extensions
+    inverse: if true, removes all files except given extensions
     """
     extensions = [x.strip() for x in extensions.split(',')]
     extensions = tuple(extensions)
@@ -48,16 +60,22 @@ def cleanExtensions(extensions: str = "", inverse: bool = False):
     def scandirs(path):
         for root, _, files in os.walk(path):
             for currentFile in files:
+                file_path = os.path.join(root, currentFile)
+                try:
+                    # check mode
+                    if inverse:
+                        if not str(currentFile).lower().endswith(extensions):
+                            os.remove(file_path)
+                            typer.echo(f"Removed: {file_path}")
+                    else:
+                        if str(currentFile).lower().endswith(extensions):
+                            os.remove(file_path)
+                            typer.echo(f"Removed: {file_path}")
+                except Exception as e:
+                    typer.echo(f"Error removing {file_path}: {e}")
 
-                # check mode
-                if inverse:
-                    if (not str(currentFile).lower().endswith(tuple(extensions))):
-                        os.remove(os.path.join(root, currentFile))
-                else:
-                    if (str(currentFile).lower().endswith(tuple(extensions))):
-                        os.remove(os.path.join(root, currentFile))
-
-    typer.echo(scandirs('.'))
+    scandirs(path)
+    typer.echo("Operation completed successfully.")
 
 
 @app.command(help='create new file')
@@ -75,40 +93,18 @@ def touch(filename: str):
 
 
 @app.command(help='encrypts the folder')
-def encrypt(argument: str, password: str):
+def encrypt(folder: str, password: str):
     # check if argument is folder
-    if os.path.isdir(argument):
-        typer.echo(f"{argument} identifies as a folder")
-    else:
-        typer.echo(f"{argument} is not a folder")
-        return
-
-    folderHash = md5(argument.encode()).hexdigest()
-    folder = argument
-
-    if getKey(folderHash) is None:
+    if os.path.isdir(folder):
+        typer.echo(f"{folder} identifies as a folder")
         tool = AES(
             origin=folder,
             password=password
         )
         tool.encryptFiles()
-        setKey(folderHash, True)
     else:
-        typer.echo(f"folder {folder} is already encrypted")
-        confirm = typer.prompt(
-            "do you want to decrypt? (y/n)"
-        )
-
-        if confirm == 'y':
-            tool = AES(
-                origin=folder,
-                password=password
-            )
-            tool.decryptFiles()
-            deleteKey(folderHash)
-
-        else:
-            typer.echo('>> stopping encryption process')
+        typer.echo(f"{folder} is not a folder")
+        return
 
 
 @app.command(help='decrypts the folder')
@@ -116,48 +112,58 @@ def decrypt(argument: str, password: str):
 
     if os.path.isdir(argument):
         typer.echo(f"{argument} identifies as a folder")
+        tool = AES(
+            origin=argument,
+            password=password,
+            allowedExtensions=['aes']
+        )
+        tool.decryptFiles()
     else:
         typer.echo(f"{argument} is not a folder")
         return
 
-    folderHash = md5(argument.encode()).hexdigest()
 
-    if (getKey(folderHash) is not None):
-        tool = AES(
-            origin=argument,
-            password=password
-        )
-        tool.decryptFiles()
-        deleteKey(folderHash)
+@app.command("cache", help="Encrypts/decrypts the cache folder")
+def cache(
+    encrypt_flag: bool = typer.Option(
+        False, "--encrypt", help="Encrypt the cache folder"),
+    decrypt_flag: bool = typer.Option(
+        False, "--decrypt", help="Decrypt the cache folder"),
+    password: str = typer.Option(
+        "123", "--password", help="Password for encryption/decryption")
+):
+    if encrypt_flag and decrypt_flag:
+        typer.echo(
+            "Error: Cannot use both --encrypt and --decrypt flags together.")
+        raise typer.Exit(code=1)
+    elif encrypt_flag:
+        encrypt(argument=CACHE_PATH, password=password)
+        os.system(f'attrib +s +h {CACHE_PATH}')
+        typer.echo("Cache folder encrypted and hidden.")
+    elif decrypt_flag:
+        decrypt(argument=CACHE_PATH, password=password)
+        os.system(f'attrib -s -h {CACHE_PATH}')
+        typer.echo("Cache folder decrypted and visible.")
     else:
-        typer.echo(f"folder {argument} is not encrypted")
+        typer.echo("Error: Please use either --encrypt or --decrypt flag.")
+        raise typer.Exit(code=1)
 
 
-@app.command("cache", help="encrypts/decrypt the cache folder")
-def cache(password: str, action: str):
-    CACHE = "E:/@cache"
-
-    if action == "encrypt":
-        encrypt(
-            argument=CACHE,
-            password=password
-        )
-        os.system(f'attrib +s +h {CACHE}')
+@app.command('peek', help='hide/unhide the vault (does not lock)')
+def peek(hide: bool = typer.Option(False, "--hide", help="Hide the vault"),
+         show: bool = typer.Option(False, "--show", help="Show the vault")):
+    if hide and show:
+        typer.echo("Error: Cannot use both --hide and --show flags together.")
+        raise typer.Exit(code=1)
+    elif hide:
+        os.system(f'attrib +s +h {CACHE_PATH}')
+        typer.echo("Vault is now hidden.")
+    elif show:
+        os.system(f'attrib -s -h {CACHE_PATH}')
+        typer.echo("Vault is now visible.")
     else:
-        decrypt(
-            argument=CACHE,
-            password=password
-        )
-        os.system(f'attrib -s -h {CACHE}')
-
-
-@app.command('peeker', help='hide/unhide the vault (does not lock)')
-def peeker(peek: bool = True):
-    CACHE = "E:/@cache"
-    if peek:
-        os.system(f'attrib -s -h {CACHE}')
-    else:
-        os.system(f'attrib +s +h {CACHE}')
+        typer.echo("Error: Please use either --hide or --show flag.")
+        raise typer.Exit(code=1)
 
 
 @app.command('git-switch', help='switches git user with specific name')
@@ -253,6 +259,42 @@ def storyNative(packageManager='npm'):
 
     typer.echo(f"starting... docs")
     os.system(final_command)
+
+
+@app.command('remove-audio-all', help='remove audio from video using CUDA')
+def removeAudio(path: str = typer.Option(TESTING_PATH, "--path", help="Root path for videos")):
+    files = getFiles(
+        allowedExtensions=['mp4', 'mkv', 'webm'],
+        rootPath=path,
+    )
+
+    NO_AUDIO_PATH = os.path.join(path, "no_audio")
+    os.makedirs(NO_AUDIO_PATH, exist_ok=True)
+
+    for file in files:
+        input_file = file['fpath']
+        input_directory = file['directory']
+
+        common_path = os.path.relpath(input_directory, start=NO_AUDIO_PATH)
+        common_path = common_path.replace(".", "")
+
+        new_file = NO_AUDIO_PATH + common_path + '\\' + \
+            file['filenameWithoutExtension'] + \
+            '_no_audio' + '.' + file['extension']
+
+        os.makedirs(os.path.dirname(new_file), exist_ok=True)
+
+        # check if file['filenameWithoutExtension'] ends with _no_audio
+        if file['filenameWithoutExtension'].endswith('_no_audio'):
+            print(f"Skipping {file['filename']}")
+            continue
+
+        # remove audios
+        ffmpeg_cmd = f'ffmpeg -y -hwaccel cuda -i "{input_file}" -c:v copy -an "{new_file}"'
+        os.system(ffmpeg_cmd)
+        print(f"Processed {file['filename']}")
+
+    print("All files processed successfully")
 
 
 if __name__ == "__main__":

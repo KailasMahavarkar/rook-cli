@@ -4,9 +4,12 @@ import pyAesCrypt as fileaes
 import json
 import os
 from utils.textaes import AESCipher
+from utils.util import getFiles
+
 
 def join(path, child):
     return os.path.join(path, child)
+
 
 class Cacher:
     @staticmethod
@@ -20,18 +23,16 @@ class Cacher:
                         cacheIgnoreNames.append(line.strip())
         return cacheIgnoreNames
 
-    def __init__(self, 
-            origin='',
-            ignorePaths=[],
-            password='123',
-            allowedExtensions=[
-                'webm', 'mpg', 'mp2', 'mpeg', 'mpe',
-                'mpv', 'ogg', 'mp4', 'm4p', 'm4v', 'avi',
-                'wmv.mov', 'qt', 'flv', 'swf', 'avchd', 'txt'
-            ],
-
-
-        ) -> None:
+    def __init__(self,
+                 origin='',
+                 ignorePaths=[],
+                 password='123',
+                 allowedExtensions=[
+                     'webm', 'mpg', 'mp2', 'mpeg', 'mpe',
+                     'mpv', 'ogg', 'mp4', 'm4p', 'm4v', 'avi',
+                     'wmv.mov', 'qt', 'flv', 'swf', 'avchd', 'txt'
+                 ],
+                ) -> None:
         # get all subdirectories
         self.origin = origin
         self.password = password
@@ -45,45 +46,8 @@ class Cacher:
 
         self.lockfile = join(self.root, '.lockfile')
         self.cacheIgnorePath = join(self.root, '.cacheignore')
-        self.cacheIgnoreNames = self.cacheIgnoreCheck(ignorePaths, self.cacheIgnorePath)
-
-    def crawlDirs(self):
-        crawlingDirs = []
-
-        crawlingDirs.append(self.origin)
-        for root, dirs, files in os.walk(self.origin, topdown=True):
-            dirs[:] = [d for d in dirs if d not in self.cacheIgnoreNames]
-
-            if (len(dirs) > 0):
-                for dirr in dirs:
-                    crawlingDirs.append(os.path.join(root, dirr))
-
-        return crawlingDirs
-
-    def crawlFiles(self, mode='encrypt'):
-        files = []
-        dirs = []
-        if mode == 'decrypt':
-            self.allowedExtensions = ['aes']
-
-        for dirr in self.crawlDirs():
-            for f in os.listdir(dirr):
-                fpath = os.path.join(dirr, f)
-                if f not in files and not os.path.isdir(fpath):
-                    fileName = f.split('\\')[-1]
-                    if fileName is not None:
-                        nameWithExt = fileName.split('.')
-                        if (len(nameWithExt) > 1):
-                            extension = nameWithExt[-1]
-                            if (extension in self.allowedExtensions):
-                                files.append({
-                                    "fpath": fpath,
-                                    "directory": dirr,
-                                    "filename": f,
-                                    "extension": extension
-                                })
-
-        return files
+        self.cacheIgnoreNames = self.cacheIgnoreCheck(
+            ignorePaths, self.cacheIgnorePath)
 
     def encryptFiles(self):
         errorMap = {}
@@ -98,7 +62,11 @@ class Cacher:
                 directory: "E:/test"
             }
         """
-        for file in self.crawlFiles():
+        for file in getFiles(
+            allowedExtensions=self.allowedExtensions,
+            rootPath=self.origin,
+            cacheIgnoreNames=self.cacheIgnoreNames
+        ):
             filename = file['filename']
             fpath = file['fpath']
             dirr = file['directory']
@@ -131,7 +99,11 @@ class Cacher:
         errorJSON = {}
         visited = defaultdict(list)
 
-        for file in self.crawlFiles(mode='decrypt'):
+        for file in getFiles(
+            allowedExtensions=self.allowedExtensions,
+            rootPath=self.origin,
+            cacheIgnoreNames=self.cacheIgnoreNames
+        ):
             filename = file['filename']
             fpath = file['fpath']
             dirr = file['directory']
@@ -150,7 +122,6 @@ class Cacher:
                 except Exception as e:
                     errorMap[filename] = str(e)
 
-
         if errorMap != {}:
             errorJSON = json.dumps(errorMap)
             with open(file=self.errorPath, mode='w+') as file:
@@ -160,5 +131,4 @@ class Cacher:
 if __name__ == "__main__":
     instance = Cacher(origin='E:\@cache')
     instance.encryptFiles()
-
     # instance.decryptFiles()
