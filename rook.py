@@ -108,18 +108,18 @@ def encrypt(folder: str, password: str):
 
 
 @app.command(help='decrypts the folder')
-def decrypt(argument: str, password: str):
+def decrypt(folder: str, password: str):
 
-    if os.path.isdir(argument):
-        typer.echo(f"{argument} identifies as a folder")
+    if os.path.isdir(folder):
+        typer.echo(f"{folder} identifies as a folder")
         tool = AES(
-            origin=argument,
+            origin=folder,
             password=password,
             allowedExtensions=['aes']
         )
         tool.decryptFiles()
     else:
-        typer.echo(f"{argument} is not a folder")
+        typer.echo(f"{folder} is not a folder")
         return
 
 
@@ -137,11 +137,11 @@ def cache(
             "Error: Cannot use both --encrypt and --decrypt flags together.")
         raise typer.Exit(code=1)
     elif encrypt_flag:
-        encrypt(argument=CACHE_PATH, password=password)
+        encrypt(folder=CACHE_PATH, password=password)
         os.system(f'attrib +s +h {CACHE_PATH}')
         typer.echo("Cache folder encrypted and hidden.")
     elif decrypt_flag:
-        decrypt(argument=CACHE_PATH, password=password)
+        decrypt(folder=CACHE_PATH, password=password)
         os.system(f'attrib -s -h {CACHE_PATH}')
         typer.echo("Cache folder decrypted and visible.")
     else:
