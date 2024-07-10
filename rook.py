@@ -1,3 +1,4 @@
+import subprocess
 import typer
 import os
 from hashlib import md5
@@ -296,6 +297,46 @@ def removeAudio(path: str = typer.Option(TESTING_PATH, "--path", help="Root path
 
     print("All files processed successfully")
 
+
+@app.command('carwaleweb:test', help='start carwale test')
+def carwalewebTest(platforms='carwale'):
+    platforms = platforms.replace(" ", "").split(",")
+    platformMap = {
+        'carwale': r'carwale\\PWA',
+        'bikewale': r'BikeWale.UI\\pwa',
+        'editorial': r'editorial\\ui',
+        'emicalci': r'EmiCalci\\ui',
+        'finance': r'finance\\ui',
+        'leadform': r'leadform\\ui',
+        'leadform-shared': r'leadform\\ui-shared',
+        'location': r'location\\ui',
+        'mobility': r'mobilityoutlook\\ui',
+        'retail': r'Retail\\ui',
+        'testdrive': r'TestDrive\\ui',
+        'used': r'used\\ui-shared',
+    }
+
+    for platform in platforms:
+        if platform in platformMap:
+            platformPath = os.path.join(
+                r"C:\\Users\\Kailas.m\\Desktop\\carwale\\carwaleweb", 
+                platformMap[platform]
+            )
+
+            if os.path.exists(platformPath):
+                # Change the working directory to the specified directory
+                os.chdir(platformPath)
+
+                # Now, you can run a PowerShell function within this directory using subprocess
+                powershell_command = f"npm run test"
+                try:
+                    subprocess.run(["powershell", powershell_command], shell=True, check=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"Error running PowerShell command: {e}")
+            else:
+                print(f"path {platformPath} does not exist.")
+        else:
+            print("Invalid platform provided.")
 
 if __name__ == "__main__":
     app()
