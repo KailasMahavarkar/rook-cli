@@ -47,14 +47,22 @@ def pinger():
 
 @app.command('clean-extensions', help="Removes all files with given extensions")
 def cleanExtensions(
-    extensions: str = typer.Option("", help="Comma-separated list of extensions to remove"),
-    inverse: bool = typer.Option(False, help="If true, removes all files except given extensions"),
+    extensions: str = typer.Option(
+        "", help="Comma-separated list of extensions to remove"),
+    inverse: bool = typer.Option(
+        False, help="If true, removes all files except given extensions"),
     path: str = typer.Option(".", help="Path to the directory to clean")
 ):
     """
     extensions: comma separated extensions
     inverse: if true, removes all files except given extensions
     """
+
+    if not extensions:
+        typer.echo("No extensions provided")
+        typer.echo("Usage: rook clean-extensions --extensions=\"ext1,ext2\"")
+        return
+
     extensions = [x.strip() for x in extensions.split(',')]
     extensions = tuple(extensions)
 
@@ -291,7 +299,8 @@ def removeAudio(path: str = typer.Option(TESTING_PATH, "--path", help="Root path
             continue
 
         # remove audios
-        ffmpeg_cmd = f'ffmpeg -y -hwaccel cuda -i "{input_file}" -c:v copy -an "{new_file}"'
+        ffmpeg_cmd = f'ffmpeg -y -hwaccel cuda -i "{
+            input_file}" -c:v copy -an "{new_file}"'
         os.system(ffmpeg_cmd)
         print(f"Processed {file['filename']}")
 
@@ -319,7 +328,7 @@ def carwalewebTest(platforms='carwale'):
     for platform in platforms:
         if platform in platformMap:
             platformPath = os.path.join(
-                r"C:\\Users\\Kailas.m\\Desktop\\carwale\\carwaleweb", 
+                r"C:\\Users\\Kailas.m\\Desktop\\carwale\\carwaleweb",
                 platformMap[platform]
             )
 
@@ -330,13 +339,15 @@ def carwalewebTest(platforms='carwale'):
                 # Now, you can run a PowerShell function within this directory using subprocess
                 powershell_command = f"npm run test"
                 try:
-                    subprocess.run(["powershell", powershell_command], shell=True, check=True)
+                    subprocess.run(
+                        ["powershell", powershell_command], shell=True, check=True)
                 except subprocess.CalledProcessError as e:
                     print(f"Error running PowerShell command: {e}")
             else:
                 print(f"path {platformPath} does not exist.")
         else:
             print("Invalid platform provided.")
+
 
 if __name__ == "__main__":
     app()
