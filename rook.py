@@ -1,9 +1,13 @@
+import math
+from typing import Optional
+from pathlib import Path
 import subprocess
 import typer
 import os
 from hashlib import md5
 from utils.aes import Cacher as AES
 from utils.util import getFiles
+from utils.tree import *
 
 CACHE_PATH = "E:\\@cache"
 TESTING_PATH = "E:\\@testing"
@@ -82,6 +86,16 @@ def cleanExtensions(
                             typer.echo(f"Removed: {file_path}")
                 except Exception as e:
                     typer.echo(f"Error removing {file_path}: {e}")
+
+        # do 2nd pass to remove empty directories
+        for root, dirs, _ in os.walk(path, topdown=False):
+            for dir in dirs:
+                dir_path = os.path.join(root, dir)
+                try:
+                    os.rmdir(dir_path)
+                    typer.echo(f"Removed: {dir_path}")
+                except Exception as e:
+                    typer.echo(f"Error removing {dir_path}: {e}")
 
     scandirs(path)
     typer.echo("Operation completed successfully.")
@@ -349,5 +363,48 @@ def carwalewebTest(platforms='carwale'):
             print("Invalid platform provided.")
 
 
+@app.command("tree", help="Display folder structure")
+def tree(
+    path: Path = Path('.'),
+    depth: int = 2,
+    include_regex: Optional[str] = "",
+    exclude_regex: Optional[str] = fr".git|node_modules|__pycache__|\.npm|\.cache|\.yarn-cache|\.pytest_cache|\.gradle|\.m2|target|pkg|\.vs|build|Debug|Release|\.idea|\.vscode|\.next|\.nuxt|dist|\.webpack|\.sass-cache|AppData\\Local\\Temp|INetCache",
+    folder_only: bool = False,
+    sort: bool = False,
+    min_file_size: float = 0,  # Minimum file size in MB
+    min_folder_size: float = 0,  # Minimum folder size in MB
+    file_unit: str = "MB",  # Unit for MinFileSize, defaults to "MB"
+    folder_unit: str = "MB",  # Unit for MinFolderSize, defaults to "MB"
+    hide_size: bool = False,
+    show_folder_path: bool = False,  # Flag to display full path for folders
+    show_file_path: bool = False  # Flag to display full path for files
+):
+    # Convert the min_file_size and min_folder_size to bytes
+    min_file_size = convert_to_bytes(min_file_size, file_unit)
+    min_folder_size = convert_to_bytes(min_folder_size, folder_unit)
+
+    # this will yeild the tree
+    tree_generator = get_tree_helper(
+        current_path=path,
+        current_depth=depth,
+        prefix="",
+        min_file_size=min_file_size,
+        min_folder_size=min_folder_size,
+        file_unit=file_unit,
+        folder_unit=folder_unit,
+        hide_size=hide_size,
+        show_folder_path=show_folder_path,
+        show_file_path=show_file_path,
+        include_regex=include_regex,
+        exclude_regex=exclude_regex,
+        folder_only=folder_only,
+        sort=sort
+    )
+
+    for line in tree_generator:
+        typer.echo(line)
+
+
+# Main function to run the CLI
 if __name__ == "__main__":
     app()
