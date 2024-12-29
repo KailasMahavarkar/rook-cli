@@ -61,6 +61,11 @@ def get_tree_helper(
     if current_depth <= 0:
         return
 
+    # Store the current working directory before processing
+    initial_cwd = os.getcwd()
+
+    # Check if the current path is within the initial CWD
+
     items = list(current_path.iterdir())
     filtered_items = []
 
@@ -106,11 +111,11 @@ def get_tree_helper(
         connector = "└──" if is_last else "├──"
 
         if item.is_dir():
-            output = f"{prefix}{connector} \\{
-                item.resolve() if show_folder_path else item.name}"
+            output = f"{prefix}{connector} {item.relative_to(
+                current_path) if show_folder_path else item.name}"
         else:
-            output = f"{prefix}{connector} {
-                item.resolve() if show_file_path else item.name}"
+            output = f"{prefix}{connector} {item.relative_to(
+                current_path) if show_file_path else item.name}"
 
         if not hide_size:
             if item.is_file():
@@ -140,3 +145,8 @@ def get_tree_helper(
                 folder_only,
                 sort
             )
+
+    # Ensure that the CWD is not changed during the recursive traversal
+    final_cwd = os.getcwd()
+    if initial_cwd != final_cwd:
+        print(f"Warning: CWD has changed from {initial_cwd} to {final_cwd}")
