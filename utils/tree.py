@@ -54,8 +54,10 @@ def get_tree_helper(
     show_file_path: bool,
     include_regex: Optional[str],
     exclude_regex: Optional[str],
-    folder_only: bool, sort: bool
+    folder_only: bool,
+    sort: bool
 ):
+    # Base case to stop recursion when depth reaches zero
     if current_depth <= 0:
         return
 
@@ -118,11 +120,13 @@ def get_tree_helper(
 
         yield output
 
+        # Recursion: Decrease depth and pass the new prefix for child elements
         if item.is_dir():
             new_prefix = f"{prefix}{'    ' if is_last else '│   '}"
-            get_tree_helper(
+            # Ensure depth decreases only on directories
+            yield from get_tree_helper(
                 item,
-                current_depth - 1,
+                current_depth - 1,  # Decrease depth for the next recursive call
                 new_prefix,
                 min_file_size,
                 min_folder_size,

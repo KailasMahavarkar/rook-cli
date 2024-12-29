@@ -383,7 +383,7 @@ def tree(
     min_file_size = convert_to_bytes(min_file_size, file_unit)
     min_folder_size = convert_to_bytes(min_folder_size, folder_unit)
 
-    # this will yeild the tree
+    # this will yield the tree
     tree_generator = get_tree_helper(
         current_path=path,
         current_depth=depth,
