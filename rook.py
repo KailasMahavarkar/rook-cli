@@ -313,8 +313,7 @@ def removeAudio(path: str = typer.Option(TESTING_PATH, "--path", help="Root path
             continue
 
         # remove audios
-        ffmpeg_cmd = f'ffmpeg -y -hwaccel cuda -i "{
-            input_file}" -c:v copy -an "{new_file}"'
+        ffmpeg_cmd = f'ffmpeg -y -hwaccel cuda -i "{input_file}" -c:v copy -an "{new_file}"'
         os.system(ffmpeg_cmd)
         print(f"Processed {file['filename']}")
 

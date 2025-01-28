@@ -111,11 +111,9 @@ def get_tree_helper(
         connector = "└──" if is_last else "├──"
 
         if item.is_dir():
-            output = f"{prefix}{connector} {item.relative_to(
-                current_path) if show_folder_path else item.name}"
+            output = f"{prefix}{connector} {item.relative_to(current_path) if show_folder_path else item.name}"
         else:
-            output = f"{prefix}{connector} {item.relative_to(
-                current_path) if show_file_path else item.name}"
+            output = f"{prefix}{connector} {item.relative_to(current_path) if show_file_path else item.name}"
 
         if not hide_size:
             if item.is_file():
