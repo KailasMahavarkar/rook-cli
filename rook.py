@@ -1,17 +1,14 @@
-import math
 from typing import Optional
 from pathlib import Path
 import subprocess
 import typer
 import os
-from hashlib import md5
 from utils.aes import Cacher as AES
 from utils.util import getFiles
 from utils.tree import *
 
 CACHE_PATH = "E:\\@cache"
 TESTING_PATH = "E:\\@testing"
-
 
 TYPER_OPTIONS = {
     "help": "help",
@@ -51,11 +48,11 @@ def pinger():
 
 @app.command('clean-extensions', help="Removes all files with given extensions")
 def cleanExtensions(
-    extensions: str = typer.Option(
-        "", help="Comma-separated list of extensions to remove"),
-    inverse: bool = typer.Option(
-        False, help="If true, removes all files except given extensions"),
-    path: str = typer.Option(".", help="Path to the directory to clean")
+        extensions: str = typer.Option(
+            "", help="Comma-separated list of extensions to remove"),
+        inverse: bool = typer.Option(
+            False, help="If true, removes all files except given extensions"),
+        path: str = typer.Option(".", help="Path to the directory to clean")
 ):
     """
     extensions: comma separated extensions
@@ -148,12 +145,12 @@ def decrypt(folder: str, password: str):
 
 @app.command("cache", help="Encrypts/decrypts the cache folder")
 def cache(
-    encrypt_flag: bool = typer.Option(
-        False, "--encrypt", help="Encrypt the cache folder"),
-    decrypt_flag: bool = typer.Option(
-        False, "--decrypt", help="Decrypt the cache folder"),
-    password: str = typer.Option(
-        "123", "--password", help="Password for encryption/decryption")
+        encrypt_flag: bool = typer.Option(
+            False, "--encrypt", help="Encrypt the cache folder"),
+        decrypt_flag: bool = typer.Option(
+            False, "--decrypt", help="Decrypt the cache folder"),
+        password: str = typer.Option(
+            "123", "--password", help="Password for encryption/decryption")
 ):
     if encrypt_flag and decrypt_flag:
         typer.echo(
@@ -284,6 +281,37 @@ def storyNative(packageManager='npm'):
     os.system(final_command)
 
 
+@app.command("switch-registry", help="Switches the npm registry")
+def switch_registry(
+    registry: str = typer.Argument("npm", help="Registry to switch")
+):
+    mapping = {
+        "setu": "https://setu-npm-448903783933.d.codeartifact.ap-south-1.amazonaws.com/npm/setu-npm/",
+        "npm": "https://registry.npmjs.org/",
+    }
+
+    if registry not in mapping:
+        typer.echo(f"Registry {registry} is not supported")
+        typer.echo(f"Supported registries: {list(mapping.keys())}")
+        registry = "npm"  # fallback to npm
+        return
+
+    os.system(f"npm config set registry {mapping[registry]}")
+    typer.echo(f"Switched to {registry} registry")
+
+    # print current registry
+    os.system("npm config get registry")
+
+
+@app.command("insecure-chrome", help="Starts chrome with security disabled")
+def insecure_chrome():
+    typer.echo("Starting Chrome with security disabled")
+    os.system(
+        "open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir --disable-web-security"
+    )
+    
+
+
 @app.command('remove-audio-all', help='remove audio from video using CUDA')
 def removeAudio(path: str = typer.Option(TESTING_PATH, "--path", help="Root path for videos")):
     files = getFiles(
@@ -364,19 +392,19 @@ def carwalewebTest(platforms='carwale'):
 
 @app.command("tree", help="Display folder structure")
 def tree(
-    path: Path = Path('.'),
-    depth: int = 2,
-    include_regex: Optional[str] = "",
-    exclude_regex: Optional[str] = fr".git|node_modules|__pycache__|\.npm|\.cache|\.yarn-cache|\.pytest_cache|\.gradle|\.m2|target|pkg|\.vs|build|Debug|Release|\.idea|\.vscode|\.next|\.nuxt|dist|\.webpack|\.sass-cache|AppData\\Local\\Temp|INetCache",
-    folder_only: bool = False,
-    sort: bool = False,
-    min_file_size: float = 0,  # Minimum file size in MB
-    min_folder_size: float = 0,  # Minimum folder size in MB
-    file_unit: str = "MB",  # Unit for MinFileSize, defaults to "MB"
-    folder_unit: str = "MB",  # Unit for MinFolderSize, defaults to "MB"
-    hide_size: bool = False,
-    show_folder_path: bool = False,  # Flag to display full path for folders
-    show_file_path: bool = False  # Flag to display full path for files
+        path: Path = Path('.'),
+        depth: int = 2,
+        include_regex: Optional[str] = "",
+        exclude_regex: Optional[str] = fr".git|node_modules|__pycache__|\.npm|\.cache|\.yarn-cache|\.pytest_cache|\.gradle|\.m2|target|pkg|\.vs|build|Debug|Release|\.idea|\.vscode|\.next|\.nuxt|dist|\.webpack|\.sass-cache|AppData\\Local\\Temp|INetCache",
+        folder_only: bool = False,
+        sort: bool = False,
+        min_file_size: float = 0,  # Minimum file size in MB
+        min_folder_size: float = 0,  # Minimum folder size in MB
+        file_unit: str = "MB",  # Unit for MinFileSize, defaults to "MB"
+        folder_unit: str = "MB",  # Unit for MinFolderSize, defaults to "MB"
+        hide_size: bool = False,
+        show_folder_path: bool = False,  # Flag to display full path for folders
+        show_file_path: bool = False  # Flag to display full path for files
 ):
     # Convert the min_file_size and min_folder_size to bytes
     min_file_size = convert_to_bytes(min_file_size, file_unit)
@@ -405,6 +433,57 @@ def tree(
     for line in tree_generator:
         typer.echo(line)
 
+
+@app.command(help="Generated FIU consent")
+def consent(
+    url: str,
+    fiu: str = typer.Option("onemoney", help="FIU name"),
+    dev: bool = typer.Option(True, help="Development mode")
+):
+    # check if url is provided
+    if not url:
+        typer.echo("No URL provided")
+        typer.echo("Usage: rook consent --url=\"https://example.com\"")
+
+    # check if fiu is valid
+    prod_fiu_map = {
+        "onemoney": "https://onemoney.fiu.com",
+        "setuaa": "https://setuaa.fiu.com"
+    }
+
+    dev_fiu_map = {
+        "onemoney": "http://localhost:4200",
+        "setuaa": "https://localhost:4200"
+    }
+
+    dev_setu_fiu_map = {
+        "onemoney": "http://localhost:4200",
+        "setuaa": "https://localhost:4200"
+    }
+
+    fiu_map = dev_fiu_map if dev else prod_fiu_map
+
+    # check if fiu is valid
+    if fiu not in fiu_map:
+        typer.echo("Invalid FIU provided")
+        typer.echo("Usage: rook consent --fiu=\"onemoney\"")
+        for key, value in fiu_map.items():
+            typer.echo(f"{key} - {value}")
+        return
+
+    from pyperclip import copy
+    import requests
+
+    response = requests.get(url)
+    if response.history:
+        query_params_token = response.url.split("webview/")[1]
+
+        # rebuild the url
+        rebuild_url = f"{fiu_map[fiu]}/webview/{query_params_token}"
+        copy(rebuild_url)
+        print(response.url)
+    else:
+        print("URL is not valid")
 
 
 # Main function to run the CLI
