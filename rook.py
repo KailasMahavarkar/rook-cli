@@ -191,16 +191,28 @@ def gitSwitch(profile: str):
     profileMap = {
         "orkait": "orkaitsolutions@gmail.com",
         "kai": "kailashmahavarkar5@gmail.com",
-        "cwk": "kailas.m@carwale.com"
+        "carwale": "kailas.m@carwale.com",
+        "setu": "kailas@setu.co"
+    }
+
+    usernameMapping = {
+        "orkait": "orkait",
+        "kai": "kailasmahavarkar",
+        "carwale": "cw-kailas",
+        "setu": "setu-kailas"
     }
 
     if (profile in profileMap):
-        os.system(f'git config --global user.name "{profile}"')
+        os.system(f'git config --global user.name "{usernameMapping[profile]}"')
         os.system(f'git config --global user.email "{profileMap[profile]}"')
         print(f'echo "git switch user: {profile}"')
     else:
         print(f'echo "profile {profile} is does not exists"')
         print(f'echo possible values, {[x for x in profileMap.keys()]}')
+
+@app.command("git-id", help="identify current git user")
+def git_id():
+    os.system("git config user.name")
 
 
 @app.command('shutdown', help='shutdown pc (minutes)')
