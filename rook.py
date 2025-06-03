@@ -309,7 +309,12 @@ def insecure_chrome():
     os.system(
         "open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir --disable-web-security"
     )
-    
+
+
+@app.command("aws-ca", help="Configures AWS CLI")
+def configure_aws():
+    os.system("aws codeartifact login --tool npm --repository setu-npm --domain setu-npm --domain-owner 448903783933")
+    typer.echo("AWS CLI configured successfully")
 
 
 @app.command('remove-audio-all', help='remove audio from video using CUDA')
