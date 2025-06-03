@@ -491,6 +491,21 @@ def consent(
         print("URL is not valid")
 
 
+# jupyter notebook --NotebookApp.allow_origin='https://colab.research.google.com' --NotebookApp.disable_check_xsrf=True --port=8888 --NotebookApp.port_retries=0 --NotebookApp.token='' --NotebookApp.password='' --ServerApp.iopub_data_rate_limit=1000000000
+@app.command("jupyter", help="Starts jupyter notebook on port 8888")
+def jupyter(
+    allow_origin: str = "https://colab.research.google.com",
+    disable_check_xsrf: bool = True,
+    port: int = 8888,
+    port_retries: int = 0,
+    token: str = "",
+    password: str = "",
+    iopub_data_rate_limit: int = 1000000000
+):
+    command = f"jupyter notebook --NotebookApp.allow_origin='{allow_origin}' --NotebookApp.disable_check_xsrf={disable_check_xsrf} --port={port} --NotebookApp.port_retries={port_retries} --NotebookApp.token='{token}' --NotebookApp.password='{password}' --ServerApp.iopub_data_rate_limit={iopub_data_rate_limit}"
+    os.system(command)
+
+
 # Main function to run the CLI
 if __name__ == "__main__":
     app()
